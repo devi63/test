@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Will you be my Valentine?</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --bg1: #ffd6e7;
+      --bg2: #ffeef6;
+      --card: #ffffffcc;
+      --yes: #ff3b7a;
+      --yesHover: #ff1f68;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100svh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at top, var(--bg2), var(--bg1));
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+      padding: 20px;
+    }
+
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .card {
+      position: relative;
+      z-index: 10;
+      width: min(500px, 95vw);
+      padding: 40px 20px;
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 30px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .art {
+      width: 180px;
+      margin-bottom: 20px;
+      filter: drop-shadow(0 10px 8px rgba(0,0,0,0.1));
+    }
+
+    h1 {
+      font-size: clamp(24px, 6vw, 36px);
+      color: #444;
+      margin-bottom: 30px;
+      line-height: 1.2;
+    }
+
+    .button-container {
+      position: relative;
+      height: 180px; /* Space for the "No" button to jump around */
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    button {
+      padding: 15px 35px;
+      font-size: 20px;
+      font-weight: bold;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+      transition: all 0.2s ease;
+      touch-action: none;
+    }
+
+    #yesBtn {
+      background-color: var(--yes);
+      color: white;
+      z-index: 50;
+    }
+
+    #noBtn {
+      background-color: #eee;
+      color: #555;
+      position: absolute;
+      z-index: 40;
+    }
+
+    .result {
+      display: none;
+      animation: appear 0.5s ease-out forwards;
+    }
+
+    .result h2 {
+      font-size: 40px;
+      color: var(--yes);
+      margin: 10px 0;
+    }
+
+    .gif-container img {
+      width: 100%;
+      max-width: 250px;
+      border-radius: 20px;
+    }
+
+    @keyframes appear {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="confettiCanvas"></canvas>
+
+  <main class="card" id="mainCard">
+    <div id="questionContent">
+      <svg class="art" viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="fur" x1="0" x2="1">
+            <stop offset="0" stop-color="#f7c7a1"/><stop offset="1" stop-color="#f2a97b"/>
+          </linearGradient>
+          <linearGradient id="heart" x1="0" x2="1">
+            <stop offset="0" stop-color="#ff4d7d"/><stop offset="1" stop-color="#ff1f68"/>
+          </linearGradient>
+        </defs>
+        <path d="M250 50 C250 33 270 25 282 38 C294 25 314 33 314 50 C314 78 282 92 282 106 C282 92 250 78 250 50Z" fill="url(#heart)"/>
+        <path d="M90 120 C90 70 140 40 190 60 C240 40 290 70 290 120 C290 180 240 210 190 210 C140 210 90 180 90 120Z" fill="url(#fur)"/>
+        <path d="M110 92 L95 55 L140 78 Z" fill="#f2a97b"/>
+        <path d="M270 92 L285 55 L240 78 Z" fill="#f2a97b"/>
+        <circle cx="160" cy="130" r="8"/>
+        <circle cx="220" cy="130" r="8"/>
+        <path d="M190 144 C186 144 182 148 182 152 C182 160 190 164 190 170 C190 164 198 160 198 152 C198 148 194 144 190 144Z" fill="#ff7aa2"/>
+      </svg>
+      <h1>Nirali, will you be my Valentine?</h1>
+      <div class="button-container" id="btnContainer">
+        <button id="yesBtn">Yes</button>
+        <button id="noBtn">No</button>
+      </div>
+    </div>
+
+    <div class="result" id="resultContent">
+      <h2>YAY! 🎉</h2>
+      <div class="gif-container">
+        <img src="https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif" alt="celebration">
+      </div>
+      <p style="font-weight: bold; color: #777; margin-top: 15px;">See you soon! ❤️</p>
+    </div>
+  </main>
+
+  <script>
+    const noBtn = document.getElementById('noBtn');
+    const yesBtn = document.getElementById('yesBtn');
+    const questionContent = document.getElementById('questionContent');
+    const resultContent = document.getElementById('resultContent');
+    const container = document.getElementById('btnContainer');
+
+    let scale = 1;
+
+    // Runaway logic
+    function moveButton() {
+      const containerRect = container.getBoundingClientRect();
+      const btnRect = noBtn.getBoundingClientRect();
+
+      // Calculate max available space
+      const maxX = containerRect.width - btnRect.width;
+      const maxY = containerRect.height - btnRect.height;
+
+      // Generate random positions
+      const randomX = Math.floor(Math.random() * maxX);
+      const randomY = Math.floor(Math.random() * maxY);
+
+      noBtn.style.left = randomX + 'px';
+      noBtn.style.top = randomY + 'px';
+
+      // Make Yes button grow
+      scale += 0.15;
+      yesBtn.style.transform = `scale(${scale})`;
+    }
+
+    noBtn.addEventListener('mouseover', moveButton);
+    noBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      moveButton();
+    });
+
+    // Success logic
+    yesBtn.addEventListener('click', () => {
+      questionContent.style.display = 'none';
+      resultContent.style.display = 'block';
+      
+      const duration = 5 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+      function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+      }, 250);
+    });
+  </script>
+</body>
+</html>
